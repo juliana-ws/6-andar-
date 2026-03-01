@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6º Andar – Hospital de Base</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --primary: #3b82f6;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --cyan: #06b6d4;
+    --text: #f1f5f9;
+    --text-muted: #64748b;
+    --text-soft: #94a3b8;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before { content:''; position:fixed; top:-200px; left:-200px; width:600px; height:600px; background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%); pointer-events:none; z-index:0; }
+  body::after { content:''; position:fixed; bottom:-200px; right:-200px; width:500px; height:500px; background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%); pointer-events:none; z-index:0; }
+
+  nav { position: sticky; top:0; z-index:100; background: rgba(10,15,30,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; gap: 10px; height: 58px; }
+  .nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .nav-logo .badge { background: var(--primary); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .nav-tabs { display: flex; gap: 3px; overflow-x: auto; scrollbar-width: none; }
+  .nav-tabs::-webkit-scrollbar { display:none; }
+  .nav-tab { padding: 6px 13px; border-radius: 30px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.2s; white-space: nowrap; font-family: 'DM Sans', sans-serif; }
+  .nav-tab:hover { color: var(--text); background: var(--surface2); }
+  .nav-tab.active { background: var(--primary); color: white; }
+  .nav-tab.trr-tab.active { background: var(--red); }
+
+  .page { display:none; padding: 18px 16px; max-width: 1000px; margin: 0 auto; position:relative; z-index:1; }
+  .page.active { display:block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .page-header { margin-bottom: 20px; }
+  .page-header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 3px; }
+  .page-header p { color: var(--text-soft); font-size: 13px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-blue { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+  .dot-green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot-amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .dot-purple { background: var(--purple); box-shadow: 0 0 8px var(--purple); }
+  .dot-cyan { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .dot-red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; transition: transform 0.2s; }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 11px; color: var(--text-soft); }
+
+  .floor-map { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 580px) { .floor-map { grid-template-columns: 1fr; } }
+  .ala-card { background: var(--surface); border-radius: var(--radius); padding: 16px; border: 1px solid var(--border); }
+  .ala-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .ala-a { color: var(--primary); } .ala-b { color: var(--green); }
+  .bed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
+  .bed { aspect-ratio: 1; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+  .bed:hover { transform: scale(1.08); z-index: 2; }
+  .bed-occupied { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: var(--primary); }
+  .bed-isolation { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: var(--red); }
+  .bed-num { font-size: 10px; font-weight: 700; } .bed-status { font-size: 8px; margin-top: 1px; }
+  .room-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+  .support-rooms { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .room-chip { font-size: 11px; font-weight: 500; padding: 4px 9px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-soft); background: var(--surface2); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-soft); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; margin: 2px; }
+  .tag-blue { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+  .tag-green { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .tag-amber { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+  .tag-red { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+  .tag-purple { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: #67e8f9; border: 1px solid rgba(6,182,212,0.3); }
+
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .role-card { background: var(--surface2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .role-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.15); }
+  .role-card.sel-rotineiro { border-color: var(--primary); background: rgba(59,130,246,0.08); }
+  .role-card.sel-assistencial { border-color: var(--green); background: rgba(16,185,129,0.08); }
+  .role-card.sel-tecnico { border-color: var(--cyan); background: rgba(6,182,212,0.08); }
+  .role-card.sel-apoio { border-color: var(--amber); background: rgba(245,158,11,0.08); }
+  .role-icon { font-size: 32px; margin-bottom: 8px; }
+  .role-name { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+  .role-desc { font-size: 11px; color: var(--text-soft); }
+
+  .accordion-item { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; overflow: hidden; }
+  .accordion-header { padding: 13px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; background: var(--surface2); user-select: none; transition: background 0.2s; gap: 10px; }
+  .accordion-header:hover { background: rgba(255,255,255,0.05); }
+  .accordion-arrow { transition: transform 0.25s; font-size: 11px; flex-shrink: 0; }
+  .accordion-item.open .accordion-arrow { transform: rotate(180deg); }
+  .accordion-body { display: none; padding: 14px 16px; font-size: 13px; line-height: 1.8; color: var(--text-soft); background: var(--surface); }
+  .accordion-item.open .accordion-body { display: block; }
+  .accordion-body ol { padding-left: 18px; }
+  .accordion-body ol li { margin-bottom: 8px; }
+  .section-badge { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; margin-left:8px; background:rgba(255,255,255,0.06); color:var(--text-muted); }
+
+  .shift-selector { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+  .shift-btn { padding: 8px 16px; border-radius: 30px; border: 1.5px solid var(--border); background: transparent; color: var(--text-soft); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .shift-btn:hover { border-color: var(--primary); color: var(--text); }
+  .shift-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+  .task-section { margin-bottom: 16px; }
+  .task-section-title { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); margin-bottom: 7px; padding: 7px 12px; background: var(--surface2); border-radius: var(--radius-sm); border-left: 3px solid var(--primary); }
+  .task-list { list-style: none; }
+  .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px; border-radius: var(--radius-sm); margin-bottom: 3px; font-size: 13px; line-height: 1.5; border: 1px solid transparent; cursor: pointer; transition: all 0.15s; }
+  .task-item:hover { background: var(--surface2); border-color: var(--border); }
+  .task-item.done { opacity: 0.4; text-decoration: line-through; }
+  .task-check { width: 17px; height: 17px; min-width: 17px; border-radius: 5px; border: 1.5px solid var(--text-muted); display: flex; align-items: center; justify-content: center; margin-top: 1px; font-size: 10px; transition: all 0.2s; }
+  .task-item.done .task-check { background: var(--green); border-color: var(--green); color: white; }
+  .task-time { font-size: 11px; font-weight: 700; color: var(--primary); min-width: 40px; margin-top: 2px; background: rgba(59,130,246,0.1); border-radius: 4px; padding: 1px 5px; text-align: center; flex-shrink:0; }
+  .task-time.warn { color: var(--amber); background: rgba(245,158,11,0.1); }
+
+  .timeline { position: relative; padding-left: 26px; }
+  .timeline::before { content:''; position:absolute; left:8px; top:6px; bottom:6px; width:2px; background: linear-gradient(to bottom, var(--primary), var(--green), var(--amber)); border-radius:2px; }
+  .tl-item { position: relative; margin-bottom: 18px; }
+  .tl-dot { position:absolute; left:-21px; top:4px; width:13px; height:13px; border-radius:50%; border: 2px solid var(--bg); }
+  .tl-dot-blue { background: var(--primary); } .tl-dot-green { background: var(--green); } .tl-dot-amber { background: var(--amber); }
+  .tl-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .tl-body { font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+  .info-box { border-radius: var(--radius); padding: 13px 16px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
+  .info-box.amber { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #fcd34d; }
+  .info-box.blue { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); color: #93c5fd; }
+  .info-box.green { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: #6ee7b7; }
+  .info-box.red { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--surface2); color: var(--text-soft); font-weight: 600; padding: 9px 11px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 9px 11px; border-bottom: 1px solid var(--border); line-height: 1.5; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  #role-detail { display:none; }
+  #role-detail.visible { display:block; animation: fadeIn 0.3s ease; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  /* TRR specific */
+  .trr-hero {
+    background: linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(245,158,11,0.08) 100%);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .trr-hero-icon { font-size: 36px; flex-shrink: 0; }
+  .trr-hero-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--red); margin-bottom: 4px; }
+  .trr-hero-sub { font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+
+  .trr-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .trr-info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; }
+  .trr-info-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 6px; }
+  .trr-info-value { font-size: 13px; color: var(--text-soft); line-height: 1.65; }
+
+  .nao-trr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 7px; }
+  .nao-trr-item { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.18); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-soft); line-height: 1.4; }
+  .nao-trr-x { color: var(--red); font-size: 14px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+  .obj-list { list-style: none; padding: 0; }
+  .obj-list li { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+  .obj-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .obj-num { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; color: var(--red); background: rgba(239,68,68,0.1); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .med-list { list-style: none; padding: 0; }
+  .med-list li { display: flex; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-soft); line-height: 1.6; }
+  .med-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .med-num { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(59,130,246,0.1); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+  .andar-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; margin: 3px; border: 1px solid; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">🏥 <span>6º Andar</span><span class="badge">HB</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('mapa',this)">🗺 Mapa</button>
+    <button class="nav-tab" onclick="showPage('atribuicoes',this)">📋 Atribuições</button>
+    <button class="nav-tab" onclick="showPage('checklist',this)">✅ Checklist</button>
+    <button class="nav-tab trr-tab" onclick="showPage('trr',this)">🚨 TRR</button>
+    <button class="nav-tab" onclick="showPage('ponto',this)">⏱ Ponto</button>
+  </div>
+</nav>
+
+<!-- ===== MAPA ===== -->
+<div class="page active" id="page-mapa">
+  <div class="page-header"><h1>Mapa da Unidade</h1><p>6º Andar · Hospital de Base · 49 leitos · 8 especialidades cirúrgicas</p></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-num" style="color:var(--primary)">49</div><div class="stat-label">Total de Leitos</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">25</div><div class="stat-label">Ala A</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--cyan)">24</div><div class="stat-label">Ala B</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">5</div><div class="stat-label">Isolamentos</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--purple)">8</div><div class="stat-label">Especialidades</div></div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(59,130,246,.5)"></div>Ocupado</div>
+    <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,.5)"></div>Isolamento</div>
+  </div>
+  <div class="floor-map">
+    <div class="ala-card">
+      <div class="ala-title"><span class="ala-a">● ALA A</span> · 602–608</div>
+      <div class="room-label">602 – Isolamento</div>
+      <div style="margin-bottom:10px;"><div class="bed bed-isolation" style="width:46px;height:46px;display:inline-flex;"><div class="bed-num">602</div><div class="bed-status">ISO</div></div></div>
+      <div id="ala-a-rooms"></div>
+      <div class="support-rooms">
+        <span class="room-chip">👥 Sala Multiprofissional</span>
+        <span class="room-chip">🗑 Expurgo</span>
+        <span class="room-chip">📦 DML</span>
+      </div>
+    </div>
+    <div class="ala-card">
+      <div class="ala-title"><span class="ala-b">● ALA B</span> · 609–616</div>
+      <div id="ala-b-rooms"></div>
+      <div class="room-label" style="margin-top:10px;">Isolamentos</div>
+      <div class="bed-grid">
+        <div class="bed bed-isolation"><div class="bed-num">614</div><div class="bed-status">ISO</div></div>
+        <div class="bed bed-isolation"><div class="bed-num">615</div><div class="bed-status">ISO</div></div>
+        <div class="bed bed-isolation"><div class="bed-num">616.1</div><div class="bed-status">ISO</div></div>
+        <div class="bed bed-isolation"><div class="bed-num">616.2</div><div class="bed-status">ISO</div></div>
+      </div>
+      <div class="support-rooms">
+        <span class="room-chip">🥗 Nutrição</span><span class="room-chip">💊 Farmácia</span>
+        <span class="room-chip">🏥 Supervisão Enf.</span><span class="room-chip">📅 Nurah – Exames</span>
+        <span class="room-chip">🛌 Repouso Residentes</span><span class="room-chip">💉 Sala Estéreis</span>
+        <span class="room-chip">⚙️ Sala Equipamentos</span><span class="room-chip">♻️ Sala Resíduos</span>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title"><span class="dot dot-cyan"></span>Áreas Comuns e Apoio</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px;">
+      <span class="room-chip">🚑 601 – Base TRR / Time Resposta Rápida</span>
+      <span class="room-chip">☕ Copa</span>
+      <span class="room-chip">🚻 2 Banheiros</span>
+      <span class="room-chip">🛌 Repouso Enfermeiros</span>
+      <span class="room-chip">🛌 Repouso Técnicos (Masc.)</span>
+      <span class="room-chip">🛌 Repouso Técnicos (Fem.)</span>
+      <span class="room-chip">🛗 Elevador – Secretaria Médica</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-purple"></span>Especialidades</div>
+    <div>
+      <span class="tag tag-blue">Cirurgia Geral</span><span class="tag tag-green">Cirurgia do Trauma</span>
+      <span class="tag tag-purple">Cirurgia Oncológica</span><span class="tag tag-cyan">Cirurgia Torácica</span>
+      <span class="tag tag-amber">Cirurgia Ap. Digestivo</span><span class="tag tag-red">Proctologia</span>
+      <span class="tag tag-blue">Otorrinolaringologia</span><span class="tag tag-green">Oftalmologia</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ATRIBUIÇÕES ===== -->
+<div class="page" id="page-atribuicoes">
+  <div class="page-header"><h1>Atribuições por Função</h1><p>Selecione seu perfil para ver todas as responsabilidades completas</p></div>
+  <div class="role-grid">
+    <div class="role-card" id="card-rotineiro" onclick="selectRole('rotineiro')">
+      <div class="role-icon">👩‍⚕️</div><div class="role-name">Enfermeiro Rotineiro</div>
+      <div class="role-desc">Coordenação e supervisão · Escala 12h alternada</div>
+    </div>
+    <div class="role-card" id="card-assistencial" onclick="selectRole('assistencial')">
+      <div class="role-icon">🩺</div><div class="role-name">Enfermeiro Assistencial</div>
+      <div class="role-desc">Avaliação clínica, prescrições e cuidado direto</div>
+    </div>
+    <div class="role-card" id="card-tecnico" onclick="selectRole('tecnico')">
+      <div class="role-icon">💉</div><div class="role-name">Técnico Assistencial</div>
+      <div class="role-desc">Medicamentos, higiene e cuidados diretos</div>
+    </div>
+    <div class="role-card" id="card-apoio" onclick="selectRole('apoio')">
+      <div class="role-icon">🔧</div><div class="role-name">Técnico de Apoio</div>
+      <div class="role-desc">Abastecimento, materiais e logística</div>
+    </div>
+  </div>
+  <div id="role-detail"></div>
+</div>
+
+<!-- ===== CHECKLIST ===== -->
+<div class="page" id="page-checklist">
+  <div class="page-header"><h1>Checklist do Plantão</h1><p>Clique nos itens para marcar como concluído</p></div>
+  <div class="shift-selector">
+    <button class="shift-btn active" onclick="selectShift('manha',this)">🌅 Manhã (07h)</button>
+    <button class="shift-btn" onclick="selectShift('tarde',this)">☀️ Tarde (13h)</button>
+    <button class="shift-btn" onclick="selectShift('noite',this)">🌙 Noite (19h)</button>
+  </div>
+  <div id="checklist-content"></div>
+</div>
+
+<!-- ===== TRR ===== -->
+<div class="page" id="page-trr">
+  <div class="page-header"><h1>Time de Resposta Rápida</h1><p>TRR Cirúrgico · Hospital de Base</p></div>
+
+  <div class="trr-hero">
+    <div class="trr-hero-icon">🚨</div>
+    <div>
+      <div class="trr-hero-title">TRR — Time de Resposta Rápida</div>
+      <div class="trr-hero-sub">O TRR é composto exclusivamente pelo <strong>médico plantonista</strong>. O acionamento pode ser realizado via <strong>grupo de WhatsApp (TRR)</strong> ou diretamente pelo <strong>celular pessoal</strong> do médico. Faz parte de um processo de melhoria contínua na instituição, reduzindo a ocorrência de PCR e a taxa de mortalidade hospitalar.</div>
+    </div>
+  </div>
+
+  <!-- Cobertura e funcionamento -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-red"></span>Cobertura e Funcionamento</div>
+    <div class="trr-info-grid">
+      <div class="trr-info-box">
+        <div class="trr-info-label">📅 Período de Cobertura</div>
+        <div class="trr-info-value">Segunda à Segunda<br><strong style="color:var(--text)">Tarde:</strong> 13h00 – 19h00<br><strong style="color:var(--text)">Noite:</strong> 19h00 – 07h00</div>
+      </div>
+      <div class="trr-info-box">
+        <div class="trr-info-label">🏠 Base de Operações</div>
+        <div class="trr-info-value">Enfermaria <strong style="color:var(--red)">601</strong><br>6º Andar<br>Hospital de Base</div>
+      </div>
+      <div class="trr-info-box">
+        <div class="trr-info-label">👨‍⚕️ Composição da Equipe</div>
+        <div class="trr-info-value"><strong style="color:var(--text)">Médico Plantonista</strong><br><span style="font-size:11px;color:var(--text-muted)">Composição exclusiva</span></div>
+      </div>
+      <div class="trr-info-box">
+        <div class="trr-info-label">📞 Formas de Acionamento</div>
+        <div class="trr-info-value">Grupo WhatsApp <strong style="color:var(--text)">TRR</strong><br>Celular pessoal do médico<br>Ramal CTR: <strong style="color:var(--primary); font-size:15px;">8990</strong></div>
+      </div>
+    </div>
+    <div class="info-box red" style="margin-top:4px;margin-bottom:0;">
+      🚫 <strong>Atenção:</strong> O TRR <strong>não atende</strong> pacientes fora dos andares listados abaixo.
+    </div>
+  </div>
+
+  <!-- Andares e especialidades -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-amber"></span>Locais de Atuação — Enfermarias Cirúrgicas</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+      <span class="andar-badge" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.35);color:#93c5fd;">🏢 2º Andar</span>
+      <span class="andar-badge" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.35);color:#6ee7b7;">🏢 3º Andar</span>
+      <span class="andar-badge" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fcd34d;">🏢 5º Andar</span>
+      <span class="andar-badge" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.35);color:#fca5a5;">🏢 6º Andar ← Base</span>
+      <span class="andar-badge" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.35);color:#c4b5fd;">🏢 7º Andar</span>
+      <span class="andar-badge" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.35);color:#67e8f9;">🔒 Ala Prisional (11º)</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+      <strong style="color:var(--text-soft)">Especialidades atendidas:</strong> Ortopedia · Neurocirurgia · Cirurgia Vascular · Cirurgia Geral · Urologia · Otorrinolaringologia · Cirurgia Torácica · Cirurgia Oncológica · Proctologia · Mastologia · Onco-Ginecologia
+    </div>
+  </div>
+
+  <!-- Objetivos -->
+  <div class="card">
+    <div class="card-title"><span class="dot dot-green"></span>Objetivos e Diretrizes do TRR</div>
+    <ul class="obj-list">
+      <li><span class="obj-num">1</span><span>Fazer parte de um processo de <strong style="color:var(--text)">melhoria contínua</strong> na instituição, sendo monitorado e aprimorado conforme as necessidades do serviço de saúde — reduzindo a ocorrência de PCR e a taxa de mortalidade hospitalar.</span></li>
+      <li><span class="obj-num">2</span><span>Estabelecer os <strong style="color:var(--text)">critérios de avaliação de deterioração do paciente</strong> e capacitar os colaboradores para realizar a avaliação correta; confeccionar protocolos objetivados das patologias e demandas que motivem o acionamento do TRR.</span></li>
+      <li><span class="obj-num">3</span><span><strong style="color:var(--text)">Indicar o melhor local</strong> para assistência ao paciente em deterioração.</span></li>
+      <li><span class="obj-num">4</span><span>Estabelecer os <strong style="color:var(--text)">fluxos de deslocamento</strong> para o TRR e as metas de tempo para o início do atendimento após o deslocamento.</span></li>
+      <li><span class="obj-num">5</span><span>Orientar todas as equipes que, em caso de acionamento do TRR, os <strong style="color:var(--text)">pacientes sob cuidados dos membros do TRR</strong> deverão ser atendidos pelos demais membros da equipe.</span></li>
+      <li><span class="obj-num">6</span><span>Possuir <strong style="color:var(--text)">mecanismos de avaliação</strong> da qualidade da assistência prestada pelo TRR.</span></li>
+      <li><span class="obj-num">7</span><span>O TRR é composto exclusivamente pelo <strong style="color:var(--text)">médico plantonista</strong>, podendo contar com apoio de outros profissionais conforme necessidade do atendimento.</span></li>
+      <li><span class="obj-num">8</span><span>Estabelecer as rotinas das equipes de apoio para <strong style="color:var(--text)">transporte e transferência</strong> do paciente.</span></li>
+    </ul>
+    <div class="info-box blue" style="margin-top:14px;margin-bottom:0;">
+      📝 <strong>Registro obrigatório:</strong> Todos os profissionais envolvidos devem registrar o atendimento, as medidas e os resultados no <strong>prontuário eletrônico</strong> do paciente.
+    </div>
+  </div>
+
+  <!-- Atribuições do médico -->
+  <div class="card" style="border-color:rgba(59,130,246,0.25);">
+    <div class="card-title"><span class="dot dot-blue"></span>Atribuições do Médico Plantonista TRR</div>
+    <ul class="med-list">
+      <li><span class="med-num">1</span><span>Apresentar-se no plantão no dia/horário previsto com <strong style="color:var(--text)">pontualidade</strong>, em caráter presencial e no grupo de WhatsApp (grupo TRR), onde fica acessível para chamadas de demandas — também pode ser acionado diretamente pelo <strong style="color:var(--text)">celular pessoal</strong>.</span></li>
+      <li><span class="med-num">2</span><span>Prestar apoio à equipe assistente no atendimento de pacientes com intercorrências que piorem sua <strong style="color:var(--text)">condição clínica</strong>.</span></li>
+      <li><span class="med-num">3</span><span>Manter bom relacionamento no ambiente de trabalho.</span></li>
+      <li><span class="med-num">4</span><span>Atendimento com <strong style="color:var(--text)">agilidade e presteza</strong> ao paciente, com atuação no sentido de resolução da demanda solicitada com pró-atividade.</span></li>
+      <li><span class="med-num">5</span><span><strong style="color:var(--text)">Escrever todas as condutas</strong> em prontuário.</span></li>
+      <li><span class="med-num">6</span><span>Declaração de óbito preenchida mediante documento oficial do paciente, se na sequência do atendimento da equipe do TRR e dentro das regras do CRM. <strong style="color:var(--red)">Causas externas devem ser encaminhadas para o IML.</strong></span></li>
+      <li><span class="med-num">7</span><span>No caso de descida dos pacientes para o Pronto Socorro — <strong style="color:var(--text)">acompanhar o paciente</strong>, passar o caso para o plantonista do setor após prévio contato. <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:6px;padding:2px 8px;font-size:12px;color:#93c5fd;margin-left:4px;">📞 Ramal CTR: <strong>8990</strong></span></span></li>
+    </ul>
+  </div>
+
+  <!-- NÃO é atribuição do TRR -->
+  <div class="card" style="border-color:rgba(239,68,68,0.3);">
+    <div class="card-title"><span class="dot dot-red"></span>🚫 O Que NÃO É Atribuição do TRR</div>
+    <div style="font-size:13px;color:var(--text-soft);margin-bottom:14px;">As situações abaixo <strong style="color:var(--red)">não devem ser acionadas para o TRR</strong>. Encaminhar às equipes responsáveis de cada especialidade:</div>
+    <div class="nao-trr-grid">
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Evolução e prescrição dos pacientes de enfermaria</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>CCIH</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Conversa com familiares / esclarecer programação do tratamento da especialidade</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Transportes para exames ou consultas</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Emitir receita, atestado ou relatório médico</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Pedido de banco de sangue rotineiro</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Admissão e alta</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>Atendimentos de demandas simples (insônia, dor leve...)</span></div>
+      <div class="nao-trr-item"><span class="nao-trr-x">✗</span><span>D.O. não relacionados ao atendimento direto da equipe do TRR</span></div>
+    </div>
+  </div>
+
+  <!-- Registro prontuário -->
+  <div class="info-box green">
+    📋 <strong>Lembre-se:</strong> Após cada acionamento, todos os membros da equipe TRR devem registrar no prontuário eletrônico: o motivo do acionamento, avaliação realizada, condutas tomadas e desfecho do atendimento.
+  </div>
+</div>
+
+<!-- ===== PONTO ===== -->
+<div class="page" id="page-ponto">
+  <div class="page-header"><h1>Registro de Ponto</h1><p>Guia de controle de jornada – IGESDF</p></div>
+  <div class="info-box blue">📌 O registro de ponto é <strong>obrigatório</strong> para todos os colaboradores (exceto cargos de chefia). A responsabilidade pelas marcações é inteiramente do colaborador.</div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-blue"></span>Como Registrar o Ponto</div>
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-dot tl-dot-blue"></div><div class="tl-title">Entrada</div><div class="tl-body">Marcar ponto ao chegar para o trabalho.</div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-green"></div><div class="tl-title">Intervalo</div><div class="tl-body">
+        • Até 4h: <strong>sem intervalo</strong><br>
+        • 4h–6h: <strong>15 min</strong> (pré-assinalado no sistema — não registrar)<br>
+        • Acima de 6h: <strong>1 hora</strong> obrigatória · não pode ser suprimida (CLT art. 71)
+      </div></div>
+      <div class="tl-item"><div class="tl-dot tl-dot-amber"></div><div class="tl-title">Saída</div><div class="tl-body">Marcar ponto ao encerrar a jornada e em qualquer ausência durante o expediente.</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-amber"></span>Esquecimento / Ausência de Marcação</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Situação</th><th>Procedimento</th></tr></thead>
+      <tbody>
+        <tr><td>Até <strong>3 esquecimentos</strong></td><td>Solicitar ao gestor via sistema <strong>MDComune</strong><br><small style="color:var(--text-muted)">www.mdcomune.com.br</small></td></tr>
+        <tr><td>Acima de <strong>3 esquecimentos</strong></td><td>Processo SEI ao Núcleo de Pessoas com anuência do gestor + comprovação de produtividade</td></tr>
+        <tr><td>Ausência total no dia</td><td>Falta com <strong>desconto em folha</strong> · perda do DSR · possível abatimento nas férias (CLT art. 130)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="info-box amber">⚠️ A omissão reiterada pode configurar <strong>desídia</strong> — sanções: advertência, suspensão ou demissão por justa causa (CLT art. 482).</div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-green"></span>Banco de Horas</div>
+    <div style="font-size:13px;color:var(--text-soft);line-height:1.7;">
+      ✔ Horas extras exigem <strong>autorização prévia</strong>, limitadas a <strong>2h por dia</strong> (CLT art. 59).<br>
+      🚫 Regimes de plantão (12x36, 18x42, 24h): <strong>não é admitida realização de horas além da jornada</strong>.<br>
+      🔄 Compensação conforme acordo com chefia e limites do ACT.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-cyan"></span>Trocas de Plantão</div>
+    <div style="font-size:13px;color:var(--text-soft);line-height:1.7;">
+      📅 Limite de <strong>4 trocas por mês</strong> (ou conforme ACT vigente).<br>
+      📝 Formalizar via <strong>processo SEI</strong> com antecedência mínima de <strong>72 horas</strong>.<br>
+      ✅ Necessária autorização da chefia imediata.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot dot-purple"></span>Ausências Legais</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Motivo</th><th>Dias</th><th>Documento</th><th>Como solicitar</th></tr></thead>
+      <tbody>
+        <tr><td>Falecimento cônjuge, filhos, pais, colaterais até 3º grau e dependente declarado na RF</td><td>4 dias consecutivos</td><td>Certidão de Óbito</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Casamento</td><td>4 dias consecutivos</td><td>Certidão de Casamento</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Licença Paternidade</td><td>20 dias consecutivos</td><td>Certidão de Nascimento</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Licença Maternidade / Adoção</td><td>180 dias consecutivos</td><td>Certidão de Nascimento</td><td>Homologação no SESMT</td></tr>
+        <tr><td>Doação de sangue</td><td>1 dia/ano</td><td>Atestado de doação</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Alistamento eleitoral</td><td>Até 2 dias úteis</td><td>Protocolo ou Título de Eleitor</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Intimação judicial</td><td>Conforme declaração</td><td>Declaração comprobatória</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Serviço militar</td><td>Conforme declaração</td><td>Declaração ou protocolo</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Exercício do voto</td><td>Período necessário</td><td>Comprovante de votação</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Vestibular</td><td>Período necessário</td><td>Declaração de comparecimento</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Acompanhar cônjuge/companheira em consultas na gravidez</td><td>Até 6 consultas</td><td>Atestado de comparecimento</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Acompanhar filho até 6 anos em consulta médica</td><td>1 dia/ano</td><td>Atestado + comprovação de filiação</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Acompanhar filho até 12 anos em reunião escolar</td><td>1 dia a cada 6 meses</td><td>Declaração comprobatória</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Exames preventivos de câncer</td><td>Até 3 dias a cada 12 meses</td><td>Comprovação do caráter preventivo</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Aborto comprovado por perícia médica</td><td>30 dias consecutivos</td><td>Atestado homologado pelo SESMT</td><td>Homologação no SESMT</td></tr>
+        <tr><td>Gestante – consultas médicas e exames complementares</td><td>Mín. 6 consultas durante a gestação</td><td>Atestado de comparecimento</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Folga Aniversário</td><td>1 dia/ano (dentro do mês de aniversário)</td><td>Processo SEI com anuência do gestor</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+        <tr><td>Abono</td><td>1 dia/semestre</td><td>Processo SEI com anuência do gestor</td><td>Processo SEI – Núcleo de Pessoas</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="info-box green">📊 Acesse seu relatório mensal de ponto em <strong>www.mdcomune.com.br</strong> com sua matrícula individual. Valide todas as marcações regularmente!</div>
+</div>
+
+<script>
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+(function(){
+  const a = document.getElementById('ala-a-rooms');
+  [603,604,605,606,607,608].forEach(r => {
+    a.innerHTML += `<div class="room-label" style="margin-top:8px">Enf. ${r}</div><div class="bed-grid">${[1,2,3,4].map(b=>`<div class="bed bed-occupied"><div class="bed-num">${r}.${b}</div></div>`).join('')}</div>`;
+  });
+  const b = document.getElementById('ala-b-rooms');
+  [609,610,611,612,613].forEach((r,i)=>{
+    b.innerHTML += `<div class="room-label"${i>0?' style="margin-top:8px"':''}>Enf. ${r}</div><div class="bed-grid">${[1,2,3,4].map(b=>`<div class="bed bed-occupied"><div class="bed-num">${r}.${b}</div></div>`).join('')}</div>`;
+  });
+})();
+
+const roles = {
+  rotineiro: {
+    title:'Enfermeiro Rotineiro', icon:'👩‍⚕️', color:'var(--primary)', cls:'sel-rotineiro',
+    note:'Duas rotineiras na escala de 12 horas, alternando o plantão.',
+    sections:[
+      { title:'🔁 Coordenação, Supervisão e Gestão da Equipe', items:[
+        '1. Coordenar, supervisionar e apoiar os profissionais da equipe de enfermagem nas atividades assistenciais e administrativas.',
+        '2. Realizar visita diária beira-leito para avaliação dos dispositivos, checagem de curativos, medicações, equipamentos e condições gerais da unidade.',
+        '3. Garantir o cumprimento das rotinas institucionais e metas de segurança do paciente.',
+        '4. Conferir prescrições médicas e de enfermagem, realizar aprazamentos e assegurar a execução correta pela equipe.',
+        '4a. Realizar o SAFETY nível 1.',
+        '5. Gerenciar a escala de pessoal, distribuição de tarefas e remanejamentos em caso de faltas.',
+        '6. Participar e/ou coordenar reuniões, Rounds e visitas multiprofissionais, registrando em atas.',
+        '7. Monitorar e preencher indicadores de qualidade, eventos adversos e notificações obrigatórias.',
+        '8. Gerenciar materiais, controle de estoques, conferência de carros de parada, geladeiras, psicotrópicos e multidoses.',
+        '9. Supervisionar o correto preenchimento do prontuário eletrônico (MVPEP) e demais sistemas/formulários/livros institucionais.',
+        '10. Acompanhar e orientar novas admissões de colaboradores e apoiar treinamentos institucionais.',
+        '11. Promover a comunicação com familiares e acompanhantes, promovendo acolhimento e orientação sobre a rotina da unidade.',
+        '12. Identificar necessidades de manutenção predial ou de equipamentos e acionar os setores responsáveis.',
+        '13. Atuar como referência técnica no setor para a resolução de intercorrências clínicas, operacionais e assistenciais.',
+        '14. Estar disponível para atuar de forma colaborativa com os gestores em processos internos, como auditorias, fiscalizações e planos de ação.',
+      ]},
+      { title:'📋 Passagem de Plantão e Continuidade da Assistência', items:[
+        '1. Realizar a passagem de plantão com registro formal e orientações claras para continuidade da assistência.',
+        '2. Validar e acompanhar a administração de antibióticos, hemocomponentes e infusões contínuas.',
+        '3. Verificar e validar a sinalização dos pacientes conforme protocolo institucional (precauções, risco de queda, dor, etc.).',
+        '4. Acompanhar a movimentação dos pacientes: altas, transferências internas/externas, óbitos e internações, assegurando registro e comunicação adequada.',
+        '5. Realizar registros específicos de visitas técnicas, acompanhamento de pacientes críticos e ações de melhoria.',
+        '6. Supervisionar e validar procedimentos de enfermagem de maior complexidade realizados por técnicos.',
+      ]},
+      { title:'🤝 Liderança, Comunicação e Segurança Institucional', items:[
+        '7. Mediar conflitos da equipe de forma ética e respeitosa, garantindo ambiente de trabalho seguro e colaborativo.',
+        '8. Ser o elo entre a assistência e os setores administrativos, otimizando fluxos e solucionando pendências operacionais.',
+        '9. Gerenciar eventos adversos (queda, flebite, lesões, erros de medicação, entre outros) e promover medidas corretivas/preventivas com a equipe.',
+        '10. Verificar o cumprimento de rotinas de higienização, descarte de resíduos, controle de infecção e normas de biossegurança.',
+        '11. Estimular a adesão aos protocolos institucionais e promover discussões de caso clínico com foco na segurança e boas práticas assistenciais.',
+        '12. Garantir que os prontuários estejam atualizados e prontos para auditoria (alta responsável).',
+        '13. Estimular a equipe para o uso correto de EPI e comunicação de riscos ocupacionais.',
+        '14. Ser referência de orientação técnica durante a ausência da chefia da unidade.',
+        '15. Acompanhar as vistorias internas e externas (VISA, auditorias, núcleo de qualidade, etc.).',
+        '16. Atuar em alinhamento com a Gerência de Enfermagem e demais lideranças para assegurar os resultados esperados dos indicadores institucionais.',
+      ]},
+    ]
+  },
+  assistencial: {
+    title:'Enfermeiro Assistencial', icon:'🩺', color:'var(--green)', cls:'sel-assistencial',
+    note:'A divisão de alas é organizacional — a responsabilidade assistencial é compartilhada por todos os pacientes da unidade.',
+    sections:[
+      { title:'⏰ 1. Passagem de Plantão (07h / 13h / 19h)', items:[
+        '1.1. Receber e passar o plantão pontualmente às 07h, 13h e 19h.',
+        '1.2. Atentar-se à organização da unidade, ao quadro clínico dos pacientes, às intercorrências e às pendências.',
+        '1.3. Registrar a passagem de plantão no prontuário eletrônico, incluindo mudanças clínicas, exames pendentes e condutas médicas.',
+        '1.4. Preencher a tabela de produtividade ao final de cada plantão.',
+        '1.5. Preencher o livro do enfermeiro com todas as informações relevantes do plantão: admissões, altas, transferências internas e/ou externas, óbitos, pendências, exames realizados e a serem realizados, pareceres solicitados e respondidos.',
+      ]},
+      { title:'🛡 Metas Internacionais de Segurança do Paciente', items:[
+        '1. Identificar corretamente o paciente — utilizar pelo menos dois identificadores (nome completo e data de nascimento) antes de qualquer procedimento, medicação ou exame.',
+        '2. Melhorar a comunicação efetiva — garantir comunicação clara, completa e sem ruídos entre profissionais, especialmente em passagens de plantão e prescrições verbais.',
+        '3. Melhorar a segurança de medicamentos de alta vigilância — identificar, armazenar e administrar corretamente medicamentos de alto risco, prevenindo erros.',
+        '4. Assegurar cirurgia em local, procedimento e paciente corretos — realizar marcação do sítio cirúrgico e checklist antes do procedimento.',
+        '5. Reduzir o risco de infecções associadas aos cuidados de saúde — cumprir protocolos de higienização das mãos e medidas de prevenção de infecção.',
+        '6. Reduzir o risco de danos ao paciente decorrentes de quedas — avaliar risco de queda e implementar medidas preventivas conforme protocolo institucional.',
+      ]},
+      { title:'🔧 2. Checklist Diário de Segurança', items:[
+        '2.1. Preencher o livro de checklist diário (manhã e noite).',
+        '2.2. Checar bala de O₂, lacre do carrinho de emergência, funcionamento do desfibrilador (teste diário) e laringoscópios (lâminas, luz e pilhas/baterias).',
+        '2.3. Repor e lacrar o carrinho de parada cardiorrespiratória (CPCR) após utilização, conforme lista padronizada anexa ao checklist, sempre que necessário.',
+        '2.4. Caso algum equipamento apresente falha, comunicar ao enfermeiro rotineiro e/ou ao apoio para abertura de chamado de manutenção.',
+        '2.5. Aos finais de semana, abrir chamado pelo sistema MV, anotar o número do protocolo e comunicar no grupo de enfermeiros.',
+        '2.6. Garantir que o carrinho de emergência permaneça desobstruído e de fácil acesso.',
+        '3.1. Conferir diariamente a presença da maleta de transporte na unidade.',
+      ]},
+      { title:'📅 4. Gestão da Escala de Pessoal', items:[
+        '4.1. Conferir a escala diária dos técnicos de enfermagem.',
+        '4.2. Realizar redistribuição sempre que necessário.',
+        '4.3. Registrar ausência de colaborador no livro de escala.',
+        '4.4. Comunicar alterações à equipe (técnicos, enfermeiro rotineiro e apoio).',
+        '4.5. Elaborar a escala para o plantão seguinte.',
+        '4.6. Dividir os pacientes de acordo com o grau de dependência, considerando a rotatividade da escala.',
+        '4.7. Garantir o cumprimento da escala de almoço, jantar e repouso.',
+      ]},
+      { title:'🏥 5. Visita Beira-Leito e Avaliação Clínica', items:[
+        '5.1. Realizar visita em cada leito (manhã, tarde e noite).',
+        '5.2. Executar exame físico completo.',
+        '5.3. Estabelecer plano de cuidados individualizado.',
+        '5.4. Supervisionar a assistência prestada pela equipe técnica.',
+        '5.5. Verificar pulseira de identificação, data e condições dos dispositivos invasivos, organização e segurança do leito, risco de queda e integridade da pele.',
+        '5.6. Orientar a equipe técnica sobre preparo e encaminhamento para exames internos (EDA, TC, entre outros).',
+        '5.7. Avaliar dor, aceitação alimentar, eliminações, débito de drenos e ostomias.',
+      ]},
+      { title:'🩹 5.8. Curativos', items:[
+        '5.8.1. Realizar curativos dos pacientes internados.',
+        '5.8.2. Seguir orientação da Comissão de Curativos e do enfermeiro rotineiro.',
+        '5.8.3. Avaliar evolução de feridas cirúrgicas, drenos, ostomias e lesões por pressão.',
+        '5.8.4. Providenciar materiais necessários para o turno posterior.',
+        '5.8.5. Passar o plantão com o carrinho de curativo montado.',
+        '5.8.6. Manter carrinhos limpos, organizados e com frascos identificados com data de abertura, validade e nome do responsável (manhã, tarde e noite).',
+      ]},
+      { title:'🍽 6. Controle de Jejum', items:[
+        '6.1. Conferir diariamente prescrições médicas relacionadas a jejum.',
+        '6.2. Sinalizar no leito e no sistema os pacientes em jejum.',
+        '6.3. Orientar a equipe técnica quanto à suspensão de dieta oral e/ou enteral no horário prescrito.',
+        '6.4. Garantir que não sejam oferecidos líquidos ou alimentos fora do horário autorizado.',
+        '6.5. Comunicar à nutrição início, suspensão ou retomada de dieta.',
+        '6.6. Monitorar e registrar tempo de jejum pré e pós-operatório.',
+        '6.7. Registrar no prontuário início, término, motivo do jejum e possíveis intercorrências.',
+      ]},
+      { title:'📝 7. Registros de Enfermagem no Prontuário', items:[
+        '7.1. Realizar evolução de enfermagem no prontuário eletrônico conforme modelo da unidade.',
+        '7.2. Preencher as escalas FUGULIN, BRADEN, MORSE e SAE.',
+        '7.3. Relatar todos os procedimentos realizados.',
+        '7.4. Registrar imediatamente qualquer alteração no quadro clínico.',
+        '7.5. Checar anotações de enfermagem feitas por técnicos e auxiliares durante e ao final do plantão.',
+        '7.6. Registrar ocorrências pertinentes.',
+        '7.7. Garantir registros claros, objetivos e legalmente adequados.',
+      ]},
+      { title:'💊 8. Medicamentos e Prescrições', items:[
+        '8.1. Aprazar prescrições médicas no prontuário eletrônico.',
+        '8.2. Conferir medicamentos psicotrópicos conforme rotina institucional.',
+        '8.3. Devolver excessos à farmácia conforme protocolo.',
+        '8.4. Monitorar administração correta conforme os "9 certos" da medicação.',
+        '8.5. Notificar e registrar eventos adversos, quando houver.',
+      ]},
+      { title:'🔪 9. Mapa Cirúrgico', items:[
+        '9.1. Atualizar e conferir o mapa cirúrgico.',
+        '9.2. Organizar admissões e altas cirúrgicas previstas.',
+        '9.3. Preparar leitos para pacientes no pós-operatório.',
+      ]},
+      { title:'🚑 10. Transferências e Exames Externos', items:[
+        '10.1. Acompanhar pacientes graves em transferências internas e exames realizados na unidade ou fora dela.',
+        '10.2. Garantir estabilidade clínica antes da saída do setor.',
+        '10.3. Conferir documentação e dispositivos antes da transferência.',
+      ]},
+      { title:'🔒 11. Protocolos de Segurança do Paciente', items:[
+        '11.1. Garantir o cumprimento dos protocolos institucionais de: identificação segura, prevenção de quedas, prevenção de lesão por pressão, segurança medicamentosa, cirurgia segura e comunicação efetiva.',
+        '11.2. Notificar eventos adversos conforme rotina institucional.',
+      ]},
+      { title:'🧹 12. Organização, Infraestrutura e Comunicação', items:[
+        '12.1. Manter a organização do posto de enfermagem.',
+        '12.2. Supervisionar limpeza e organização dos leitos.',
+        '12.3. Controlar materiais e solicitar reposição quando necessário.',
+        '12.4. Atuar em intercorrências clínicas e situações de emergência.',
+        '12.5. Manter comunicação com a equipe multiprofissional (médicos, fisioterapia, nutrição, farmácia e CCIH).',
+        '12.6. Verificar pacientes em precaução, sinalizar adequadamente e comunicar a equipe técnica quanto ao uso dos EPIs necessários.',
+      ]},
+      { title:'🎓 13. Orientações a Pacientes, Familiares e Equipe', items:[
+        '13.1. Orientar pacientes e familiares quanto a cuidados pós-operatórios, uso de drenos, ostomias e curativos, prevenção de complicações e alta hospitalar.',
+        '13.2. Orientar e supervisionar a equipe técnica quanto às boas práticas assistenciais.',
+      ]},
+      { title:'🤝 14. Trabalho em Equipe e Responsabilidade Compartilhada', items:[
+        '14.1. A divisão de alas tem finalidade exclusivamente organizacional, não isentando nenhum enfermeiro da responsabilidade assistencial sobre todos os pacientes da unidade.',
+        '14.2. Nenhum profissional deve recusar o recebimento de paciente sob a justificativa de que pertence à ala do colega. Caso uma enfermeira esteja ocupada, a outra deverá receber o quadro clínico e prestar o suporte necessário.',
+        '14.3. Quando uma ala estiver com menor demanda assistencial, é dever do enfermeiro oferecer apoio à colega que esteja com maior sobrecarga, garantindo equilíbrio e segurança na assistência.',
+        '14.4. A divisão dos curativos não será realizada por ala, mas sim de acordo com a quantidade e a complexidade de cada procedimento, assegurando distribuição justa das atividades.',
+        '14.5. Quando o serviço é dividido de forma equilibrada e colaborativa, as demandas tornam-se mais leves e a assistência mais segura e eficiente.',
+        '14.6. Sempre que o técnico de enfermagem solicitar apoio em intercorrências, o enfermeiro deve dar prioridade imediata ao atendimento, não aguardando que o colega da outra ala o faça. A responsabilidade é compartilhada e a segurança do paciente é prioridade.',
+      ]},
+    ]
+  },
+  tecnico: {
+    title:'Técnico de Enfermagem Assistencial', icon:'💉', color:'var(--cyan)', cls:'sel-tecnico',
+    note:'Plantão às 7h, 13h ou 19h. Responsabilidade compartilhada com toda a equipe.',
+    sections:[
+      { title:'⏰ 1. Início do Plantão e Sinais Vitais', items:[
+        '1. Receber o plantão às 7h, 13h ou 19h, atentando-se à organização do leito, da unidade, casos dos pacientes e pendências.',
+        'Atualizar os sinais vitais a cada seis horas, ou conforme a condição clínica do paciente, aplicando a Escala NEWS (National Early Warning Score) e comunicando imediatamente quaisquer alterações ao enfermeiro de plantão.',
+      ]},
+      { title:'🚨 2–3. Emergências e Higiene das Mãos', items:[
+        '2. Auxiliar e participar nos procedimentos de emergência e em caso de intercorrências, sempre que necessário.',
+        '3. Realizar sempre os 5 momentos de higiene das mãos.',
+      ]},
+      { title:'💊 4–6. Medicamentos, Dispositivos e Equipos', items:[
+        '4. Administrar as medicações prescritas pelos médicos, de horário ou de emergência, sempre que necessário.',
+        '5. Identificar e datar todos os dispositivos e soluções no momento da instalação inicial, registrando componentes da solução, horário de preparo e nome do responsável.',
+        '→ Insulinas (Lispro, Aspart, Regular, NPH): validade de 28 dias após abertura.',
+        '→ Almotolias: validade de 7 dias após abertura.',
+        '→ Demais frascos de medicações: validade de 30 dias após abertura.',
+        '6. Trocar equipos das medicações sempre no plantão SD (preferencialmente pela manhã).',
+        'Trocar bolsa de colostomia quando necessário.',
+        'Coletar exames de urgência.',
+        'Realizar sinais vitais pós-transfusional.',
+      ]},
+      { title:'🛁 7–10. Higiene, Conforto e Organização do Leito', items:[
+        '7. Realizar e manter a higiene do paciente, com banho no leito ou aspersão conforme rotina da unidade.',
+        '8. Realizar higiene íntima e troca de fraldas sempre que necessário, para evitar que o paciente permaneça úmido.',
+        '9. Realizar a limpeza concorrente dos leitos em todos os plantões, assegurando a manutenção da organização.',
+        '10. Manter leito organizado.',
+      ]},
+      { title:'🔄 11–16. Monitoramento e Cuidados Contínuos', items:[
+        '11. Realizar reposicionamento do paciente acamado a cada duas horas.',
+        '12. Realizar cuidados presentes nas prescrições de enfermagem, atentando-se para as especificidades de cada paciente.',
+        '13. Aferir glicemia capilar conforme prescrição médica.',
+        '14. Manter cabeceira sempre elevada de 30° a 45°, exceto quando houver contraindicação sinalizada.',
+        '15. Desprezar conteúdo de drenos e trocar selo d\'água ao final do plantão ou sempre que necessário (18h e 06h).',
+        '16. Desprezar diurese de coletor fechado de SVD sempre que atingir 2/3 de sua capacidade, observando integridade do dispositivo e comunicando ao enfermeiro qualquer irregularidade.',
+      ]},
+      { title:'📝 17–18. Registros no Prontuário Eletrônico', items:[
+        '17. Realizar relatório dos pacientes no prontuário eletrônico, ao final do plantão e sempre que apresentar intercorrências.',
+        '18. Checar as medicações administradas e as prescrições de enfermagem realizadas no prontuário eletrônico, sempre que necessário.',
+      ]},
+      { title:'🏥 19–25. Procedimentos e Responsabilidades Específicas', items:[
+        '19. Acompanhar/realizar admissão do paciente junto à equipe multiprofissional.',
+        '20. Realizar ECG quando solicitado.',
+        '21. A troca da caixa de perfurocortante deve ser realizada pelo técnico de apoio e fechada pelo técnico assistencial sempre que atingir o limite recomendado, seguindo a escala diária de verificação e a rotina pré-estabelecida pela unidade.',
+        '22. Realizar preparo de corpo pós-óbito e encaminhá-lo ao necrotério.',
+        '23. Assim que abrir medicações, colocar data de validade e de abertura.',
+        '24. Conferir o kit de medicações juntamente com o técnico de enfermagem que está no apoio, conforme prescrição médica, assegurando conformidade, validade e integridade dos itens, bem como providenciar a devolução à farmácia das medicações não utilizadas ao término do turno.',
+        '25. Realizar punção de AVP sempre que necessário, atentando-se para colocação de data da punção e nome do profissional. Ocluir com membrana estéril transparente. Observar diariamente o local da punção. Trocar a cada 96h no período noturno, ou diante de sinais de infiltração/flebite.',
+        'Realizar notificação de eventos adversos.',
+        'Retirar todos os equipamentos e materiais do leito após a alta do paciente, encaminhando-os para higienização, desinfecção ou armazenamento conforme protocolo institucional.',
+      ]},
+      { title:'🔁 26. Passagem de Plantão', items:[
+        '26. Passar o plantão diariamente, atentando-se para a organização do leito e da unidade, casos dos pacientes e comunicação de pendências.',
+      ]},
+    ]
+  },
+  apoio: {
+    title:'Técnico de Enfermagem de Apoio', icon:'🔧', color:'var(--amber)', cls:'sel-apoio',
+    note:'Responsável pelo abastecimento, logística, materiais e suporte operacional de toda a unidade.',
+    sections:[
+      { title:'📞 1. Recepção e Comunicação', items:[
+        '1. Receber o plantão, garantindo comunicação efetiva e clara das informações pertinentes ao setor.',
+      ]},
+      { title:'📦 2. Abastecimento e Reposição Diária (07h / 13h / 19h)', items:[
+        '2. Abastecer os postos de enfermagem com EPIs, fraldas, saco para óbito, algodão e produtos para limpeza de superfícies nos plantões SD e SN, diariamente às 07h, 13h e 19h.',
+        '3. Repor os postos de medicação com rótulos de soros e etiquetas para identificação de abertura de frascos.',
+        '→ Acompanhar abertura e validade das almotolias, medicamentos de posto e de uso coletivo.',
+        '→ Repor pulseiras de risco, garantindo cumprimento das 6 metas internacionais de segurança do paciente.',
+        '→ Verificar a geladeira quanto à existência de medicações sem identificação.',
+        '→ Registrar diariamente a temperatura da geladeira.',
+        '→ Conferir prazos de validade das medicações dos postos.',
+        '4. Abastecer regularmente os armários dos postos com: fraldas, panos de limpeza, absorvente, capote, álcool 70%, equipos (multidose e bombas), saco coletor, esparadrapo e micropore, etiquetas de identificação, enxaguante bucal, detergente de superfície, luvas de procedimento e estéril, sondas de aspiração, fixador de TQT, jontex, cateter nasal, agulhas, seringas, algodão, jelcos, escalpes, kombi red e triway, touca, gazes, lanceta, fita de glicemia, swab, medicação de posto, copo 50ml e descarpack montado.',
+      ]},
+      { title:'📅 Calendário de Solicitação de Materiais', items:[
+        'CAF: todas as segundas-feiras.',
+        'Soluções (CAF): todas as segundas e quintas-feiras.',
+        'Almoxarifado: todas as terças-feiras.',
+        '⚠️ Em caso de feriado: antecipar ou reagendar conforme orientação do setor.',
+      ]},
+      { title:'💊 3. Conferência e Controle de Medicamentos', items:[
+        '4. Realizar a conferência dos kits de medicações juntamente com o técnico de enfermagem, garantindo que todos os itens estejam completos e disponíveis.',
+        '→ Todos os kits devem passar por dupla checagem: uma pelo técnico de apoio e outra pelo técnico responsável pelo paciente.',
+        '→ Registrar a conferência assinando no caderno do andar.',
+        '→ Em caso de falta de algum medicamento, comunicar imediatamente para reposição rápida.',
+        '→ Antibióticos só podem ser dispensados pela farmácia quando a ficha de CCIH estiver devidamente preenchida. Em caso de ausência ou preenchimento incompleto, ou se o antibiótico estiver em falta, comunicar imediatamente as enfermeiras do plantão.',
+        '→ Registrar e assinar em livro próprio após conferência.',
+        '5. Buscar prontamente as medicações SOS e de emergência sempre que necessário.',
+        '6. Receber e devolver kits do mapa de medicamentos e sobras à farmácia.',
+      ]},
+      { title:'🩺 4. Apoio a Procedimentos e Exames', items:[
+        '6. Acompanhar pacientes, juntamente com o padioleiro, para realização de exames quando necessário.',
+        '7. Realizar eletrocardiograma (ECG) sempre que solicitado ou indicado.',
+        '8. Organizar materiais para procedimentos de enfermagem e médicos, incluindo:',
+        '→ Passagem de SVD, SNE, SVA, PICC e acesso venoso central.',
+        '→ Drenagem de tórax.',
+        '→ Outros procedimentos conforme necessidade.',
+      ]},
+      { title:'🧹 5. Higiene, Limpeza e Organização', items:[
+        '12. Manter as salas de expurgo limpas e organizadas, realizando limpeza e desinfecção de equipamentos sujos diariamente (manhã, tarde e noite) e sempre que houver alta, óbito ou transferência.',
+        '13. Realizar limpeza prévia dos materiais a serem encaminhados ao CME, garantindo identificação adequada e acondicionamento conforme protocolo.',
+        '→ Controlar materiais enviados para processamento, registrando em livro próprio.',
+        '→ Buscar e conferir materiais estéreis disponibilizados pelo CME, assegurando integridade e validade.',
+        '→ Entrega e retirada de materiais devem ser diárias, preferencialmente pela manhã.',
+        'Horários CME — Manhã: sujo 09h–10h | limpo 09h30–10h · Tarde: sujo 15h–16h | limpo 15h30–16h30.',
+        '14. Encaminhar e buscar hemoconcentrados, materiais de amostras e exames laboratoriais, quando necessário.',
+        '15. Acompanhar programações de limpeza terminal em salas de apoio, armários, BINS, biombos e geladeiras.',
+        '→ Registrar e assinar em protocolo próprio, juntamente com o colaborador responsável pela limpeza.',
+      ]},
+      { title:'⚙️ 6–9. Manutenção e Controle de Equipamentos', items:[
+        '15. Solicitar manutenção de equipamentos junto à engenharia clínica ou empresas contratadas.',
+        '→ Abrir Ordem de Serviço (OS) ao identificar falhas nos sistemas prediais da unidade.',
+        '7. Manter a sala de equipamentos organizada, assegurando que todos os checklists diários estejam conferidos.',
+        '8. Conferir materiais estéreis a cada 15 dias, registrando no checklist próprio.',
+        '9. Conferir materiais estéreis da unidade, recolhendo os vencidos para descarte adequado.',
+      ]},
+    ]
+  }
+};
+
+function selectRole(role) {
+  ['rotineiro','assistencial','tecnico','apoio'].forEach(r => {
+    document.getElementById('card-'+r).className = 'role-card';
+  });
+  const data = roles[role];
+  document.getElementById('card-'+role).className = 'role-card ' + data.cls;
+  const detail = document.getElementById('role-detail');
+  detail.className = 'visible';
+  let html = `<div class="card" style="border-color:${data.color}44;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <span style="font-size:30px">${data.icon}</span>
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:${data.color}">${data.title}</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:2px;">${data.note}</div>
+      </div>
+    </div>`;
+  data.sections.forEach(s => {
+    html += `<div class="accordion-item">
+      <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+        <span>${s.title}<span class="section-badge">${s.items.length} itens</span></span>
+        <span class="accordion-arrow">▼</span>
+      </div>
+      <div class="accordion-body"><ol>${s.items.map(i=>`<li>${i}</li>`).join('')}</ol></div>
+    </div>`;
+  });
+  html += '</div>';
+  detail.innerHTML = html;
+  setTimeout(()=>detail.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+const checklistData = {
+  manha:[
+    {cat:'🔁 Passagem de Plantão',time:'07:00',warn:false,text:'Receber passagem de plantão – registrar no prontuário eletrônico'},
+    {cat:'🔁 Passagem de Plantão',time:'07:00',warn:false,text:'Conferir livro do enfermeiro: admissões, altas, transferências, pendências'},
+    {cat:'🔧 Checklist de Segurança',time:'07:10',warn:false,text:'Checar bala de O₂ e lacre do carrinho de emergência (CPCR)'},
+    {cat:'🔧 Checklist de Segurança',time:'07:10',warn:false,text:'Testar desfibrilador (teste diário) – registrar no livro de checklist'},
+    {cat:'🔧 Checklist de Segurança',time:'07:10',warn:false,text:'Verificar laringoscópios (lâminas, luz e pilhas/baterias)'},
+    {cat:'🔧 Checklist de Segurança',time:'07:15',warn:false,text:'Confirmar presença da maleta de transporte na unidade'},
+    {cat:'🔧 Checklist de Segurança',time:'07:15',warn:false,text:'Preencher livro de checklist diário (manhã)'},
+    {cat:'📅 Escala da Equipe',time:'07:20',warn:false,text:'Conferir escala diária dos técnicos de enfermagem'},
+    {cat:'📅 Escala da Equipe',time:'07:20',warn:false,text:'Realizar redistribuição se necessário · registrar ausências no livro'},
+    {cat:'📅 Escala da Equipe',time:'07:20',warn:false,text:'Comunicar alterações à equipe (técnicos, rotineiro e apoio)'},
+    {cat:'📦 Apoio – Abastecimento',time:'07:30',warn:false,text:'Abastecer postos com EPIs, fraldas, saco para óbito, algodão e produtos de limpeza'},
+    {cat:'📦 Apoio – Abastecimento',time:'07:30',warn:false,text:'Verificar geladeira (medicações sem identificação) · registrar temperatura'},
+    {cat:'📦 Apoio – Abastecimento',time:'07:30',warn:false,text:'Repor pulseiras de risco, rótulos de soros e etiquetas de abertura de frascos'},
+    {cat:'📦 Apoio – Abastecimento',time:'07:30',warn:false,text:'Conferir prazos de validade das medicações dos postos'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Visita em cada leito (manhã) – exame físico completo'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Verificar pulseira de identificação, dispositivos invasivos, integridade da pele'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Verificar risco de queda, sinalização e segurança do leito'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Avaliar dor, aceitação alimentar, eliminações, débito de drenos e ostomias'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Preencher FUGULIN, BRADEN, MORSE e SAE'},
+    {cat:'🏥 Visita Beira-Leito',time:'08:00',warn:false,text:'Estabelecer plano de cuidados individualizado para cada paciente'},
+    {cat:'💊 Medicamentos e Prescrições',time:'08:00',warn:false,text:'Aprazar prescrições médicas no prontuário eletrônico'},
+    {cat:'💊 Medicamentos e Prescrições',time:'08:00',warn:false,text:'Conferir kit de medicações (dupla checagem: técnico assistencial + apoio)'},
+    {cat:'💊 Medicamentos e Prescrições',time:'08:30',warn:false,text:'Conferir psicotrópicos conforme rotina institucional'},
+    {cat:'🍽 Controle de Jejum',time:'08:30',warn:false,text:'Conferir prescrições médicas de jejum · sinalizar no leito e no sistema'},
+    {cat:'🍽 Controle de Jejum',time:'08:30',warn:false,text:'Comunicar à nutrição início, suspensão ou retomada de dieta'},
+    {cat:'🧹 CME',time:'09:00',warn:false,text:'Enviar material sujo ao CME (09h–10h)'},
+    {cat:'🧹 CME',time:'09:30',warn:false,text:'Buscar material estéril no CME (09h30–10h)'},
+    {cat:'🩹 Curativos',time:'10:00',warn:false,text:'Realizar curativos – avaliar feridas cirúrgicas, drenos, ostomias e LPP'},
+    {cat:'🩹 Curativos',time:'10:00',warn:false,text:'Seguir orientação da Comissão de Curativos e do enfermeiro rotineiro'},
+    {cat:'🩹 Curativos',time:'10:00',warn:false,text:'Providenciar materiais para o turno posterior · manter carrinhos identificados'},
+    {cat:'🔪 Mapa Cirúrgico',time:'11:00',warn:false,text:'Atualizar mapa cirúrgico · organizar admissões e altas previstas'},
+    {cat:'🔪 Mapa Cirúrgico',time:'11:00',warn:false,text:'Preparar leitos para pacientes no pós-operatório'},
+    {cat:'📊 Safety / Indicadores',time:'11:00',warn:false,text:'Realizar SAFETY nível 1 (enfermeiro rotineiro)'},
+    {cat:'📦 Solicitação de Materiais',time:'11:00',warn:false,text:'Segundas: solicitar CAF e Soluções · Terças: solicitar Almoxarifado'},
+    {cat:'💊 Medicamentos e Prescrições',time:'12:30',warn:true,text:'Devolver excessos de psicotrópicos à farmácia conforme protocolo'},
+    {cat:'🔁 Fim de Plantão',time:'13:00',warn:true,text:'Preencher tabela de produtividade'},
+    {cat:'🔁 Fim de Plantão',time:'13:00',warn:true,text:'Preencher livro do enfermeiro com todas as informações do plantão'},
+    {cat:'🔁 Fim de Plantão',time:'13:00',warn:true,text:'Passar plantão com registro formal e carrinho de curativo montado'},
+    {cat:'🔁 Fim de Plantão',time:'13:00',warn:true,text:'Elaborar escala para o próximo plantão'},
+  ],
+  tarde:[
+    {cat:'🔁 Passagem de Plantão',time:'13:00',warn:false,text:'Receber passagem de plantão – registrar no prontuário eletrônico'},
+    {cat:'📅 Escala da Equipe',time:'13:15',warn:false,text:'Conferir escala dos técnicos · redistribuir se necessário'},
+    {cat:'📦 Apoio – Abastecimento',time:'13:30',warn:false,text:'Repor materiais e medicamentos dos postos · verificar validades'},
+    {cat:'📦 Apoio – Abastecimento',time:'13:30',warn:false,text:'Registrar temperatura da geladeira · verificar identificações'},
+    {cat:'🏥 Visita Beira-Leito',time:'13:30',warn:false,text:'Visita em cada leito (tarde) – avaliar dor, aceitação alimentar, eliminações'},
+    {cat:'🏥 Visita Beira-Leito',time:'13:30',warn:false,text:'Supervisionar assistência prestada pela equipe técnica'},
+    {cat:'💊 Medicamentos e Prescrições',time:'14:00',warn:false,text:'Conferir kit de medicações (dupla checagem)'},
+    {cat:'🩺 Exames e Transferências',time:'14:00',warn:false,text:'Acompanhar pacientes para exames externos (apoio + padioleiro)'},
+    {cat:'🩺 Exames e Transferências',time:'14:00',warn:false,text:'Garantir estabilidade clínica antes de saída do setor · conferir documentação'},
+    {cat:'🧹 CME',time:'15:00',warn:false,text:'Enviar material sujo ao CME (15h–16h)'},
+    {cat:'🧹 CME',time:'15:30',warn:false,text:'Buscar material estéril no CME (15h30–16h30)'},
+    {cat:'🩹 Curativos',time:'16:00',warn:false,text:'Realizar curativos pendentes · manter carrinhos limpos e identificados'},
+    {cat:'🔒 Segurança do Paciente',time:'16:30',warn:false,text:'Verificar pacientes em precaução · sinalizar corretamente os leitos'},
+    {cat:'🔒 Segurança do Paciente',time:'16:30',warn:false,text:'Comunicar equipe sobre uso de EPIs para pacientes em isolamento'},
+    {cat:'📝 Registros de Enfermagem',time:'17:00',warn:false,text:'Realizar evolução de enfermagem conforme modelo da unidade'},
+    {cat:'📝 Registros de Enfermagem',time:'17:00',warn:false,text:'Checar anotações dos técnicos · registrar ocorrências pertinentes'},
+    {cat:'🔄 Cuidados Contínuos',time:'18:00',warn:true,text:'Confirmar reposicionamento de pacientes acamados (a cada 2h)'},
+    {cat:'💧 Drenos e Dispositivos',time:'18:00',warn:true,text:'Desprezar drenos e trocar selo d\'água (técnico assistencial)'},
+    {cat:'💧 Drenos e Dispositivos',time:'18:00',warn:true,text:'Verificar SVD – desprezar ao atingir 2/3 da capacidade'},
+    {cat:'🔁 Fim de Plantão',time:'18:30',warn:true,text:'Preencher tabela de produtividade e livro do enfermeiro'},
+    {cat:'🔁 Fim de Plantão',time:'19:00',warn:true,text:'Passar plantão com registro formal e carrinho de curativo montado'},
+    {cat:'🔁 Fim de Plantão',time:'19:00',warn:true,text:'Elaborar escala para o próximo plantão'},
+  ],
+  noite:[
+    {cat:'🔁 Passagem de Plantão',time:'19:00',warn:false,text:'Receber passagem de plantão – registrar no prontuário eletrônico'},
+    {cat:'📅 Escala da Equipe',time:'19:10',warn:false,text:'Conferir escala dos técnicos · redistribuir se necessário'},
+    {cat:'🔧 Checklist de Segurança',time:'19:15',warn:false,text:'Checar bala de O₂, lacre do CPCR, desfibrilador e laringoscópios'},
+    {cat:'🔧 Checklist de Segurança',time:'19:15',warn:false,text:'Preencher livro de checklist diário (noite)'},
+    {cat:'📦 Apoio – Abastecimento',time:'19:30',warn:false,text:'Abastecer postos (EPIs, fraldas, materiais) · geladeira e temperatura'},
+    {cat:'🏥 Visita Beira-Leito',time:'20:00',warn:false,text:'Visita em cada leito (noite) – avaliação completa de todos os pacientes'},
+    {cat:'🏥 Visita Beira-Leito',time:'20:00',warn:false,text:'Aplicar Escala NEWS · comunicar imediatamente alterações ao enfermeiro'},
+    {cat:'🏥 Visita Beira-Leito',time:'20:00',warn:false,text:'Verificar cabeceiras elevadas 30°–45° (exceto contraindicação)'},
+    {cat:'💊 Medicamentos e Prescrições',time:'20:00',warn:false,text:'Conferir kit de medicações (dupla checagem)'},
+    {cat:'📝 Registros de Enfermagem',time:'21:00',warn:false,text:'Realizar evolução de enfermagem conforme modelo da unidade'},
+    {cat:'📝 Registros de Enfermagem',time:'21:00',warn:false,text:'Preencher FUGULIN, BRADEN, MORSE e SAE'},
+    {cat:'📝 Registros de Enfermagem',time:'21:00',warn:false,text:'Checar anotações dos técnicos · registrar ocorrências'},
+    {cat:'🔪 Mapa Cirúrgico',time:'22:00',warn:false,text:'Verificar mapa cirúrgico do dia seguinte · preparar admissões previstas'},
+    {cat:'🔄 Cuidados Noturnos',time:'00:00',warn:false,text:'Reposicionamento de pacientes acamados (a cada 2 horas)'},
+    {cat:'🔄 Cuidados Noturnos',time:'02:00',warn:false,text:'Sinais vitais e glicemias conforme prescrição médica'},
+    {cat:'🔄 Cuidados Noturnos',time:'02:00',warn:false,text:'Verificar drenos, SVD e dispositivos · comunicar alterações'},
+    {cat:'🛁 Higiene',time:'04:00',warn:false,text:'Higiene matinal precoce (banho no leito ou aspersão)'},
+    {cat:'🛁 Higiene',time:'04:00',warn:false,text:'Higiene íntima e troca de fraldas sempre que necessário'},
+    {cat:'💧 Drenos e Dispositivos',time:'06:00',warn:true,text:'Desprezar drenos e trocar selo d\'água (técnico assistencial)'},
+    {cat:'💧 Drenos e Dispositivos',time:'06:00',warn:true,text:'Desprezar diurese de SVD ao atingir 2/3 da capacidade'},
+    {cat:'📝 Registros de Enfermagem',time:'06:30',warn:true,text:'Checar todas as medicações administradas no prontuário eletrônico'},
+    {cat:'📝 Registros de Enfermagem',time:'06:30',warn:true,text:'Registrar relatório dos pacientes (intercorrências, mudanças clínicas)'},
+    {cat:'🔁 Fim de Plantão',time:'06:45',warn:true,text:'Preencher tabela de produtividade e livro do enfermeiro'},
+    {cat:'🔁 Fim de Plantão',time:'07:00',warn:true,text:'Passar plantão com registro formal e carrinho de curativo montado'},
+    {cat:'🔁 Fim de Plantão',time:'07:00',warn:true,text:'Elaborar escala para o próximo plantão'},
+  ]
+};
+
+let checkState = {};
+function selectShift(shift, btn) {
+  document.querySelectorAll('.shift-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChecklist(shift);
+}
+function renderChecklist(shift) {
+  const items = checklistData[shift];
+  const cats = [...new Set(items.map(i=>i.cat))];
+  let html='';
+  cats.forEach(cat=>{
+    html+=`<div class="task-section"><div class="task-section-title">${cat}</div><ul class="task-list">`;
+    items.filter(i=>i.cat===cat).forEach((item,idx)=>{
+      const key=shift+'_'+cat+'_'+idx;
+      const done=checkState[key];
+      html+=`<li class="task-item ${done?'done':''}" onclick="toggleTask('${key}',this)">
+        <div class="task-check">${done?'✓':''}</div>
+        <span class="task-time ${item.warn?'warn':''}">${item.time}</span>
+        <span>${item.text}</span>
+      </li>`;
+    });
+    html+='</ul></div>';
+  });
+  document.getElementById('checklist-content').innerHTML=html;
+}
+function toggleTask(key,el){
+  checkState[key]=!checkState[key];
+  el.classList.toggle('done');
+  el.querySelector('.task-check').textContent=checkState[key]?'✓':'';
+}
+renderChecklist('manha');
+</script>
+</body>
+</html>
